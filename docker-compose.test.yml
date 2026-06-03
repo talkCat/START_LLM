@@ -1,0 +1,37 @@
+version: "3.8"
+
+x-vllm-base: &vllm-base
+  image: llmhub.archermind.com/vllm/vllm-openai:v0.20.1
+  restart: unless-stopped
+  volumes:
+    - /home/dev/model/:/home/dev/model/
+  shm_size: 32g
+  ipc: host
+  networks:
+    - start-llm-test-net
+
+services:
+  qwen3-embedding-test:
+    <<: *vllm-base
+    container_name: qwen3-embedding-test
+    ports:
+      - "${TEST_MODEL_PORT:-41001}:30000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${TEST_GPU_ID:-3}"]
+              capabilities: [gpu]
+    command: >
+      ${TEST_MODEL_DIR:-/home/dev/model/Qwen/Qwen3-Embedding-0___6B/}
+      --runner pooling
+      --served-model-name ${TEST_SERVED_MODEL_NAME:-qwen3-embedding}
+      --host 0.0.0.0
+      --port 30000
+      --gpu-memory-utilization ${TEST_GPU_MEMORY_UTILIZATION:-0.40}
+
+networks:
+  start-llm-test-net:
+    name: start-llm-test-net
+    driver: bridge

@@ -1,26 +1,46 @@
 version: "3.8"
 
+# x- 开头表示“自定义扩展配置块”，不是一个真正会启动的服务。
+# &vllm-base 是 YAML 锚点，后面的服务可以用 <<: *vllm-base 复用这份基础配置。
 x-vllm-base: &vllm-base
+  # 这个镜像里已经集成了 vLLM 和 OpenAI 兼容接口服务。
   image: llmhub.archermind.com/vllm/vllm-openai:v0.20.1
+  # 容器异常退出后自动重启；如果你手动 stop，则不会自动拉起。
   restart: unless-stopped
   volumes:
+    # 把宿主机模型目录挂到容器里，容器才能读取本地模型文件。
     - /home/dev/model/:/home/dev/model/
+  # 给容器较大的共享内存，推理服务常用，避免某些模型/算子因为 shm 太小出问题。
   shm_size: 64g
+  # 与宿主机共享 IPC 命名空间，常用于高性能推理场景。
   ipc: host
 
 services:
+  # ----------------- chat / reasoning model ---------------
   qwen3.5:
+      # 继承上面 vllm-base 的公共配置。
       <<: *vllm-base
       container_name: qwen3.5
       ports:
+        # 宿主机 40000 -> 容器 30000
+        # 外部程序访问 http://<host>:40000，就会转发到容器内的 30000 端口。
         - "40000:30000"
       deploy:
         resources:
           reservations:
             devices:
+              # 指定使用 NVIDIA GPU。
               - driver: nvidia
+                # 把这项服务固定到 0 号 GPU。
                 device_ids: ["0"]
+                # 声明这里要申请的是 gpu 能力。
                 capabilities: [gpu]
+      # command 下面这一长串参数，实际就是“如何启动 vLLM”：
+      # 1. 第一项是模型目录
+      # 2. --served-model-name 是对外模型名
+      # 3. --host/--port 是容器内监听地址
+      # 4. --max-model-len / --max-num-seqs / --gpu-memory-utilization 决定资源占用
+      # 5. reasoning/tool-call 相关参数决定是否支持推理内容和工具调用格式
       command: >
         /home/dev/model/Qwen/Qwen3___6-35B-A3B/
         --served-model-name qwen3.5
@@ -44,14 +64,20 @@ services:
       <<: *vllm-base
       container_name: qwen3-embedding
       ports:
+        # Embedding 服务对外端口。
         - "40001:30000"
       deploy:
         resources:
           reservations:
             devices:
               - driver: nvidia
+                # 这几个轻量模型都放在 3 号 GPU。
                 device_ids: ["3"]
                 capabilities: [gpu]
+      # embedding 服务的关键点：
+      # 1. 模型目录换成 embedding 模型
+      # 2. --runner pooling 表示做向量池化，不做文本生成
+      # 3. --served-model-name 可以同时暴露多个别名
       command: >
         /home/dev/model/Qwen/Qwen3-Embedding-0___6B/
         --runner pooling
@@ -64,6 +90,7 @@ services:
       <<: *vllm-base
       container_name: Conan-embedding-v1
       ports:
+        # 第二个 embedding 服务端口。
         - "40004:30000"
       deploy:
         resources:
@@ -72,6 +99,7 @@ services:
               - driver: nvidia
                 device_ids: ["3"]
                 capabilities: [gpu]
+      # Conan-embedding-v1 也是 embedding 服务，所以同样使用 pooling runner。
       command: >
         /home/dev/model/TencentBAC/Conan-embedding-v1/
         --served-model-name Conan-embedding-v1 text-embedding-ada-002
@@ -83,6 +111,7 @@ services:
       <<: *vllm-base
       container_name: bge-reranker-base
       ports:
+        # rerank 服务端口。
         - "40003:30000"
       deploy:
         resources:
@@ -91,6 +120,7 @@ services:
               - driver: nvidia
                 device_ids: ["3"]
                 capabilities: [gpu]
+      # reranker 本质上是“给候选结果重新打分”的模型，所以不需要很高显存占用。
       command: >
         /home/dev/model/Xorbits/bge-reranker-base/
         --served-model-name bge-reranker-base

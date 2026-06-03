@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  openai-router-test:
+    image: docker.1ms.run/506610466/openai-router:0.1.14
+    container_name: openai-router-test
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ./data_test:/app/data
+    ports:
+      - "${TEST_ROUTER_PORT:-18083}:8082"
+    restart: unless-stopped
+    networks:
+      - start-llm-test-net
+    command:
+      - sh
+      - -lc
+      - python /app/data/init_router_test_db.py && /app/.venv/bin/openai-router --host 0.0.0.0 --port 8082
+
+networks:
+  start-llm-test-net:
+    name: start-llm-test-net
+    driver: bridge

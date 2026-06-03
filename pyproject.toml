@@ -1,0 +1,10 @@
+[project]
+name = "start-llm"
+version = "0.1.0"
+description = "Queue limit demo for FastAPI"
+readme = "AGENTS.md"
+requires-python = ">=3.11"
+dependencies = ["openai==2.6.1", "evalscope[perf]==1.5.2"]
+
+[tool.uv]
+package = false

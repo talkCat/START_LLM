@@ -1,0 +1,27 @@
+version: '3'
+services:
+  gpt_server:
+   
+    image: docker.1ms.run/506610466/gpt_server:0.7.2
+    container_name: gpt_server
+    shm_size: '32g' # 设置共享内存为4GB 
+    restart: always
+    # network_mode: host
+    ports:
+      - 28082:8082
+      - 21001:21001
+    environment:
+      - TZ:Asia/Shanghai  # 设置中国时区
+    volumes:
+      - ./gpt-server-config.yaml:/gpt_server/gpt_server/script/config.yaml # 将最新代码以及配置直接映射到容器中，以运行最新的代码
+      - /home/dev/model/:/home/dev/model/ # 映射模型路径
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              # device_ids: [ '0', '1', '2', '3' ]
+              count: all
+              # count: 2  # 两种方式
+              capabilities: [ gpu ]
+    command: python gpt_server/serving/main.py

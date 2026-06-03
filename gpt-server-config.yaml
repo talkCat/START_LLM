@@ -1,0 +1,31 @@
+serve_args:
+  enable: true
+  host: 0.0.0.0
+  port: 8082
+  controller_address: http://localhost:21001
+  api_keys: null
+controller_args:
+  enable: true
+  host: 0.0.0.0
+  port: 21001
+  dispatch_method: shortest_queue
+model_worker_args:
+  host: 0.0.0.0
+  controller_address: http://192.168.102.19:21001
+  log_level: INFO # DEBUG INFO WARNING ERROR
+  limit_worker_concurrency: 10240 # worker的最大并发数,默认为 1024
+
+models:
+
+- tts:
+    alias: null
+    enable: true
+    model_config:
+      model_name_or_path: /home/dev/model/SparkAudio/Spark-TTS-0___5B/
+      gpu_memory_utilization: 0.5
+    model_type: spark_tts
+    work_mode: vllm
+    device: gpu
+    workers:
+    - gpus:
+      - 2

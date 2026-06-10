@@ -8,4 +8,5 @@ data/
 .venv/
 config.yaml
 .env
+tests/download_model.env
 *_test.yaml

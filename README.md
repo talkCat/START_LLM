@@ -14,6 +14,7 @@
 
 - `docs/llm-start-项目全局梳理.md`：面向新接手同学的全局梳理、启动链路和运维注意事项
 - `docs/最小化测试部署说明.md`：单模型 + 单路由的最小化安装测试说明
+- `tests/download_model.env.example`：模型下载环境变量示例，默认指向 `Qwen/Qwen3-VL-Embedding-8B`
 
 ## 目录结构
 
@@ -70,9 +71,9 @@
         ┌─────────────────────┼─────────────────────┐
         ▼                     ▼                     ▼
 ┌───────────────┐    ┌───────────────┐    ┌───────────────┐
-│  qwen3.5      │    │ qwen3-embedding│  │ bge-reranker  │
-│  (GPU 0)      │    │ (GPU 3)        │  │ (GPU 3)       │
-│  :40000       │    │ :40001         │  │ :40003        │
+│  qwen3.5      │    │ qwen2.5-0.5B   │  │ qwen3-embedding│
+│  (GPU 0)      │    │ (GPU 3)        │  │ (GPU 3)        │
+│  :40000       │    │ :40002         │  │ :40001         │
 └───────────────┘    └───────────────┘    └───────────────┘
 ```
 
@@ -83,6 +84,7 @@
 | 服务 | 模型 | 端口 | GPU | 说明 |
 |------|------|------|-----|------|
 | qwen3.5 | Qwen3-6-35B-A3B | 40000 | 0 | 聊天模型，支持 thinking/工具调用 |
+| qwen2.5-0.5b-instruct | Qwen2.5-0.5B-Instruct | 40002 | 3 | 轻量聊天模型，适合最小化测试 |
 | qwen3-embedding | Qwen3-Embedding-0-6B | 40001 | 3 | Embedding 模型 |
 | Conan-embedding-v1 | Conan-embedding-v1 | 40004 | 3 | 另一个 Embedding 模型 |
 | bge-reranker-base | bge-reranker-base | 40003 | 3 | 重排序模型 |

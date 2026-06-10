@@ -79,6 +79,7 @@ openai-router  :8082
 | 服务名 | 对外端口 | GPU | 模型路径 | 主要能力 |
 |---|---|---:|---|---|
 | `qwen3.5` | `40000` | `0` | `/home/dev/model/Qwen/Qwen3___6-35B-A3B/` | 聊天、推理、工具调用 |
+| `qwen2.5-0.5b-instruct` | `40002` | `3` | `/home/dev/model/Qwen/Qwen2.5-0.5B-Instruct/` | 轻量聊天、最小化测试 |
 | `qwen3-embedding` | `40001` | `3` | `/home/dev/model/Qwen/Qwen3-Embedding-0___6B/` | Embedding |
 | `Conan-embedding-v1` | `40004` | `3` | `/home/dev/model/TencentBAC/Conan-embedding-v1/` | Embedding |
 | `bge-reranker-base` | `40003` | `3` | `/home/dev/model/Xorbits/bge-reranker-base/` | Rerank |

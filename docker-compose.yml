@@ -58,6 +58,34 @@ services:
         --enable-force-include-usage
         --default-chat-template-kwargs '{"enable_thinking": false}'
 
+  qwen2.5-0.5b-instruct:
+      # 这个模型体积小，适合做最小化聊天测试或学习 vLLM 的基础用法。
+      <<: *vllm-base
+      container_name: qwen2.5-0.5b-instruct
+      ports:
+        # 给新模型分配一个未占用的对外端口，避免和现有服务冲突。
+        - "40005:30000"
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                # 参考轻量 embedding 模型，也放在 3 号 GPU。
+                device_ids: ["3"]
+                capabilities: [gpu]
+      # 这是标准聊天模型启动方式：
+      # 1. 第一项写本地模型目录
+      # 2. 不需要 --runner pooling，因为它是生成式模型，不是 embedding 模型
+      # 3. --served-model-name 是外部通过 OpenAI 接口访问时填写的模型名
+      command: >
+        /home/dev/model/Qwen/Qwen2.5-0.5B-Instruct/
+        --served-model-name qwen2.5-0.5b-instruct
+        --host 0.0.0.0
+        --port 30000
+        --max-model-len 8192
+        --gpu-memory-utilization 0.3
+        --enable-prefix-caching
+        --max-num-seqs 32
 
   # ----------------- embedding/reranker ---------------
   qwen3-embedding:
